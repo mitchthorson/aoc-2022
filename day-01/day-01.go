@@ -46,6 +46,15 @@ func getResult1(input string) int {
 func getResult2(input string) int {
 	rawElves := strings.Split(input, "\n\n")
 	elves := getElves(rawElves)
+
+	// Alternative approach: I'm curious if one of these is more efficient than the other
+	// sort.Ints(elves)
+	// result := 0
+	// for _, i := range elves[len(elves)-3:] {
+	// 	result += i
+	// }
+	// return result
+
 	sort.Sort(sort.Reverse(sort.IntSlice(elves)))
 	return elves[0] + elves[1] + elves[2]
 }
