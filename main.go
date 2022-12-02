@@ -9,7 +9,7 @@ import (
 func main() {
 	fmt.Println("Welcome to AOC 2022!")
 	day := os.Args[1]
-	fmt.Printf("Running day %s\n", day)
+	fmt.Printf("Running day %s\n\n", day)
 	if day == "1" {
 		day01.RunTest()
 		day01.Run()

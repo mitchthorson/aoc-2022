@@ -3,6 +3,7 @@ package day01
 import (
 	"fmt"
 	"github.com/mitchthorson/aoc-2022/utils"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -30,24 +31,6 @@ func getElves(rawElves []string) []int {
 	return elves
 }
 
-func getTopElves(elves []int) [3]int {
-	var result = [3]int{0, 0, 0}
-	for _, v := range elves {
-		for i, rv := range result {
-			// this doesn't work, values get forgetten too soon
-			// @todo sort? or a smarter comparison?
-			if (v > rv) {
-				if (i < len(result) - 1) {
-					result[i + 1] = rv
-				}
-				result[i] = v
-				break
-			}
-		}
-	}
-	return result
-}
-
 func getResult1(input string) int {
 	rawElves := strings.Split(input, "\n\n")
 	elves := getElves(rawElves)
@@ -63,22 +46,18 @@ func getResult1(input string) int {
 func getResult2(input string) int {
 	rawElves := strings.Split(input, "\n\n")
 	elves := getElves(rawElves)
-	topElves := getTopElves(elves)
-	result := 0
-	for _, v := range topElves {
-		result = result + v
-	}
-	return result
+	sort.Sort(sort.Reverse(sort.IntSlice(elves)))
+	return elves[0] + elves[1] + elves[2]
 }
 
 func RunTest() {
 	input := utils.ReadTestInput(1)
 	fmt.Printf("Day 01 test part 1 result is:\n%d\n", getResult1(input))
-	fmt.Printf("Day 01 test part 2 result is:\n%d\n", getResult2(input))
+	fmt.Printf("\nDay 01 test part 2 result is:\n%d\n", getResult2(input))
 }
 
 func Run() {
 	input := utils.ReadInput(1)
-	fmt.Printf("Day 01 part 1 result is:\n%d\n", getResult1(input))
-	fmt.Printf("Day 01 part 2 result is:\n%d\n", getResult2(input))
+	fmt.Printf("\nDay 01 part 1 result is:\n%d\n", getResult1(input))
+	fmt.Printf("\nDay 01 part 2 result is:\n%d\n", getResult2(input))
 }
