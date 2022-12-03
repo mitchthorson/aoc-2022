@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"github.com/mitchthorson/aoc-2022/day-01"
+	"github.com/mitchthorson/aoc-2022/day-02"
 )
 
 func main() {
@@ -11,7 +12,9 @@ func main() {
 	day := os.Args[1]
 	fmt.Printf("Running day %s\n\n", day)
 	if day == "1" {
-		day01.RunTest()
 		day01.Run()
+	}
+	if day == "2" {
+		day02.Run()
 	}
 }

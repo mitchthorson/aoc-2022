@@ -31,7 +31,7 @@ func getElves(rawElves []string) []int {
 	return elves
 }
 
-func getResult1(input string) int {
+func GetResult1(input string) int {
 	rawElves := strings.Split(input, "\n\n")
 	elves := getElves(rawElves)
 	result := 0
@@ -43,7 +43,7 @@ func getResult1(input string) int {
 	return result
 }
 
-func getResult2(input string) int {
+func GetResult2(input string) int {
 	rawElves := strings.Split(input, "\n\n")
 	elves := getElves(rawElves)
 
@@ -59,14 +59,8 @@ func getResult2(input string) int {
 	return elves[0] + elves[1] + elves[2]
 }
 
-func RunTest() {
-	input := utils.ReadTestInput(1)
-	fmt.Printf("Day 01 test part 1 result is:\n%d\n", getResult1(input))
-	fmt.Printf("\nDay 01 test part 2 result is:\n%d\n", getResult2(input))
-}
-
 func Run() {
 	input := utils.ReadInput(1)
-	fmt.Printf("\nDay 01 part 1 result is:\n%d\n", getResult1(input))
-	fmt.Printf("\nDay 01 part 2 result is:\n%d\n", getResult2(input))
+	fmt.Printf("\nDay 01 part 1 result is:\n%d\n", GetResult1(input))
+	fmt.Printf("\nDay 01 part 2 result is:\n%d\n", GetResult2(input))
 }
