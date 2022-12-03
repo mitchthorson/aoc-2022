@@ -35,33 +35,29 @@ func decodeOutcome(encryptedOutcome string) int {
 	return result
 }
 
+func getWinsAndLosses() (map[string]string,  map[string]string) {
+	wins := map[string]string{
+		"Rock": "Scissors",
+		"Paper": "Rock",
+		"Scissors": "Paper",
+	}
+	losses := map[string]string{}
+	for k, v := range wins {
+		losses[v] = k
+	}
+	return wins, losses
+}
+
 func determinePlay(opponent string, outcome int) int {
+	wins, losses := getWinsAndLosses()
 	if outcome == 3 {
 		return getPlayScore(opponent) + outcome
 	}
-	if opponent == "Rock" {
-		if outcome == 0 {
-			return getPlayScore("Scissors") + outcome
-		}
-		if outcome == 6 {
-			return getPlayScore("Paper") + outcome
-		}
+	if outcome == 0 {
+		return getPlayScore(wins[opponent]) + outcome
 	}
-	if opponent == "Paper" {
-		if outcome == 0 {
-			return getPlayScore("Rock")
-		}
-		if outcome == 6 {
-			return getPlayScore("Scissors") + outcome
-		}
-	}
-	if opponent == "Scissors" {
-		if outcome == 0 {
-			return getPlayScore("Paper")
-		}
-		if outcome == 6 {
-			return getPlayScore("Rock") + outcome
-		}
+	if outcome == 6 {
+		return getPlayScore(losses[opponent]) + outcome
 	}
 	panic(fmt.Sprintf("Invalid round scenario opponent: %s, outcome: %d", opponent, outcome))
 }
@@ -70,29 +66,12 @@ func playGame(opponent, you string) int {
 	if opponent == you {
 		return 3
 	}
-	if opponent == "Rock" {
-		if you == "Paper" {
-			return 6
-		}
-		if you == "Scissors" {
-			return 0
-		}
+	wins, losses := getWinsAndLosses()
+	if wins[opponent] == you {
+		return 6
 	}
-	if opponent == "Paper" {
-		if you == "Rock" {
-			return 0
-		}
-		if you == "Scissors" {
-			return 6
-		}
-	}
-	if opponent == "Scissors" {
-		if you == "Rock" {
-			return 6
-		}
-		if you == "Paper" {
-			return 0
-		}
+	if losses[opponent] == you {
+		return 0
 	}
 	panic(fmt.Sprintf("Invalid move played %s vs %s", opponent, you))
 }
