@@ -34,10 +34,8 @@ func getBadge(group []string) int {
 			_, ok := groupItems[k]
 			if ok && groupItems[k] == 2 {
 				return getPriority(k)
-			} else if ok {
-				groupItems[k] += 1
 			} else {
-				groupItems[k] = 1
+				groupItems[k]++
 			}
 		}
 	}
