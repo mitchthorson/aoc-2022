@@ -6,99 +6,22 @@ import (
 	"strings"
 )
 
-func decodePlay(encryptedPlay string) string {
-	plays := map[string]string{
-		"A": "Rock",
-		"B": "Paper",
-		"C": "Scissors",
-		"X": "Rock",
-		"Y": "Paper",
-		"Z": "Scissors",
-	}
-	result, ok := plays[encryptedPlay]
-	if !ok {
-		panic(fmt.Sprintf("%s is not a valid play", encryptedPlay))
-	}
-	return result
-}
-
-func decodeOutcome(encryptedOutcome string) int {
-	outcomes := map[string]int{
-		"X": 0,
-		"Y": 3,
-		"Z": 6,
-	}
-	result, ok := outcomes[encryptedOutcome]
-	if !ok {
-		panic(fmt.Sprintf("%s is not a valid outcome", encryptedOutcome))
-	}
-	return result
-}
-
-func getWinsAndLosses() (map[string]string,  map[string]string) {
-	wins := map[string]string{
-		"Rock": "Scissors",
-		"Paper": "Rock",
-		"Scissors": "Paper",
-	}
-	losses := map[string]string{}
-	for k, v := range wins {
-		losses[v] = k
-	}
-	return wins, losses
-}
-
-func determinePlay(opponent string, outcome int) int {
-	wins, losses := getWinsAndLosses()
-	if outcome == 3 {
-		return getPlayScore(opponent) + outcome
-	}
-	if outcome == 0 {
-		return getPlayScore(wins[opponent]) + outcome
-	}
-	if outcome == 6 {
-		return getPlayScore(losses[opponent]) + outcome
-	}
-	panic(fmt.Sprintf("Invalid round scenario opponent: %s, outcome: %d", opponent, outcome))
-}
-
-func playGame(opponent, you string) int {
-	if opponent == you {
-		return 3
-	}
-	wins, losses := getWinsAndLosses()
-	if wins[opponent] == you {
-		return 6
-	}
-	if losses[opponent] == you {
-		return 0
-	}
-	panic(fmt.Sprintf("Invalid move played %s vs %s", opponent, you))
-}
-
-func getPlayScore(play string) int {
-	playScores := map[string]int{
-		"Rock":     1,
-		"Paper":    2,
-		"Scissors": 3,
-	}
-	score, ok := playScores[play]
-	if !ok {
-		panic(fmt.Sprintf("%s is not a valid play", play))
-	}
-	return score
-}
-
-func playRound(opponent, you string) int {
-	return playGame(opponent, you) + getPlayScore(you)
-}
-
 func GetResult1(rounds []string) int {
 	result := 0
 	for _, round := range rounds {
-		roundMoves := strings.Split(round, " ")
-		roundResult := playRound(decodePlay(roundMoves[0]), decodePlay(roundMoves[1]))
-		result = result + roundResult
+		fields := strings.Fields(round)
+		opponent := int(fields[0][0] - 'A')
+		player := int(fields[1][0] - 'X')
+		// add score for play
+		result += player + 1
+		switch {
+		// winning case 
+		case player == (opponent+1)%3:
+			result += 6
+		// draw case
+		case player == opponent:
+			result += 3
+		}
 	}
 	return result
 }
@@ -106,11 +29,17 @@ func GetResult1(rounds []string) int {
 func GetResult2(rounds []string) int {
 	result := 0
 	for _, round := range rounds {
-		roundMoveOutcome := strings.Split(round, " ")
-		opponentPlay := decodePlay(roundMoveOutcome[0])
-		outcome := decodeOutcome(roundMoveOutcome[1])
-		roundResult := determinePlay(opponentPlay, outcome)
-		result = result + roundResult
+		fields := strings.Fields(round)
+		opponent := int(fields[0][0] - 'A')
+		switch fields[1] {
+		case "X":
+			result += (opponent+2)%3 + 1
+		case "Y":
+			result += opponent + 1 + 3
+		case "Z":
+			result += (opponent+1)%3 + 1 + 6
+
+		}
 	}
 	return result
 }
