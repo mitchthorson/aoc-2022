@@ -1,10 +1,10 @@
 package day02
+
 import (
 	"fmt"
 	"github.com/mitchthorson/aoc-2022/utils"
 	"strings"
 )
-
 
 func decodePlay(encryptedPlay string) string {
 	plays := map[string]string{
@@ -20,6 +20,50 @@ func decodePlay(encryptedPlay string) string {
 		panic(fmt.Sprintf("%s is not a valid play", encryptedPlay))
 	}
 	return result
+}
+
+func decodeOutcome(encryptedOutcome string) int {
+	outcomes := map[string]int{
+		"X": 0,
+		"Y": 3,
+		"Z": 6,
+	}
+	result, ok := outcomes[encryptedOutcome]
+	if !ok {
+		panic(fmt.Sprintf("%s is not a valid outcome", encryptedOutcome))
+	}
+	return result
+}
+
+func determinePlay(opponent string, outcome int) int {
+	if outcome == 3 {
+		return getPlayScore(opponent) + outcome
+	}
+	if opponent == "Rock" {
+		if outcome == 0 {
+			return getPlayScore("Scissors") + outcome
+		}
+		if outcome == 6 {
+			return getPlayScore("Paper") + outcome
+		}
+	}
+	if opponent == "Paper" {
+		if outcome == 0 {
+			return getPlayScore("Rock")
+		}
+		if outcome == 6 {
+			return getPlayScore("Scissors") + outcome
+		}
+	}
+	if opponent == "Scissors" {
+		if outcome == 0 {
+			return getPlayScore("Paper")
+		}
+		if outcome == 6 {
+			return getPlayScore("Rock") + outcome
+		}
+	}
+	panic(fmt.Sprintf("Invalid round scenario opponent: %s, outcome: %d", opponent, outcome))
 }
 
 func playGame(opponent, you string) int {
@@ -53,15 +97,22 @@ func playGame(opponent, you string) int {
 	panic(fmt.Sprintf("Invalid move played %s vs %s", opponent, you))
 }
 
-func playRound(opponent, you string) int {
-	playScores := map[string] int{
-		"Rock": 1,
-		"Paper": 2,
+func getPlayScore(play string) int {
+	playScores := map[string]int{
+		"Rock":     1,
+		"Paper":    2,
 		"Scissors": 3,
 	}
-	return playGame(opponent, you) + playScores[you]
+	score, ok := playScores[play]
+	if !ok {
+		panic(fmt.Sprintf("%s is not a valid play", play))
+	}
+	return score
 }
 
+func playRound(opponent, you string) int {
+	return playGame(opponent, you) + getPlayScore(you)
+}
 
 func GetResult1(rounds []string) int {
 	result := 0
@@ -73,8 +124,21 @@ func GetResult1(rounds []string) int {
 	return result
 }
 
+func GetResult2(rounds []string) int {
+	result := 0
+	for _, round := range rounds {
+		roundMoveOutcome := strings.Split(round, " ")
+		opponentPlay := decodePlay(roundMoveOutcome[0])
+		outcome := decodeOutcome(roundMoveOutcome[1])
+		roundResult := determinePlay(opponentPlay, outcome)
+		result = result + roundResult
+	}
+	return result
+}
+
 func Run() {
 	input := utils.ReadInput(2)
 	rounds := strings.Split(input, "\n")
-	fmt.Printf("\nDay 02 part 1 result is:\n%d\n", GetResult1(rounds))
+	fmt.Printf("Day 02 part 1 result is:\n%d\n", GetResult1(rounds))
+	fmt.Printf("\nDay 02 part 2 result is:\n%d\n", GetResult2(rounds))
 }

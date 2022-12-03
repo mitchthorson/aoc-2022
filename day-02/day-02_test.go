@@ -14,6 +14,14 @@ func ExampleGetResult1() {
 	// Output: 15
 }
 
+func ExampleGetResult2() {
+	input := utils.ReadFile("./test_input.txt")
+	rounds := strings.Split(input, "\n")
+	result := GetResult2(rounds)
+	fmt.Println(result)
+	// Output: 12
+}
+
 // func TestGetResult2(t *testing.T) {
 // 	input := utils.ReadFile("./test_input.txt")
 // 	expectedResult := 45000

@@ -61,6 +61,6 @@ func GetResult2(input string) int {
 
 func Run() {
 	input := utils.ReadInput(1)
-	fmt.Printf("\nDay 01 part 1 result is:\n%d\n", GetResult1(input))
+	fmt.Printf("Day 01 part 1 result is:\n%d\n", GetResult1(input))
 	fmt.Printf("\nDay 01 part 2 result is:\n%d\n", GetResult2(input))
 }
