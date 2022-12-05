@@ -14,6 +14,18 @@ func Check(e error) {
 	}
 }
 
+func ReadLines(filename string) []string {
+	file, err := os.Open(filename)
+	Check(err)
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	lines := []string{}
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	return lines
+}
+
 func ReadFile(filename string) string {
 	file, err := os.Open(filename)
 	Check(err)
@@ -22,8 +34,14 @@ func ReadFile(filename string) string {
 	reader := bufio.NewReader(file)
 	content, err := ioutil.ReadAll(reader)
 	Check(err)
+	fmt.Println(content)
 	return strings.TrimSuffix(string(content), "\n")
 }
+func ReadInputLines(day int) []string {
+	filename := fmt.Sprintf("day-%02d/input.txt", day)
+	return ReadLines(filename)
+}
+
 
 func ReadInput(day int) string {
 	filename := fmt.Sprintf("day-%02d/input.txt", day)
