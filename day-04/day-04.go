@@ -3,7 +3,6 @@ package day04
 import (
 	"fmt"
 	"github.com/mitchthorson/aoc-2022/utils"
-	"strconv"
 	"strings"
 )
 
@@ -24,10 +23,8 @@ func (a *Assignment) contains(otherAssignment *Assignment) bool {
 }
 
 func (a *Assignment) fromStr(inputStr string) *Assignment {
-	startstop := strings.Split(inputStr, "-")
-	start, err := strconv.Atoi(startstop[0])
-	utils.Check(err)
-	stop, err := strconv.Atoi(startstop[1])
+	var start, stop int
+	_, err := fmt.Sscanf(inputStr, "%d-%d", &start, &stop)
 	utils.Check(err)
 	a.start = start
 	a.stop = stop
