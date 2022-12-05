@@ -38,9 +38,9 @@ func getPair(a string) *[2]*Assignment {
 	var assignmentPair [2]*Assignment
 	intputPairs := strings.Split(a, ",")
 	for i, p := range intputPairs {
-		assignment := Assignment{}
+		assignment := new(Assignment)
 		assignment.fromStr(p)
-		assignmentPair[i] = &assignment
+		assignmentPair[i] = assignment
 	}
 	return &assignmentPair
 }
