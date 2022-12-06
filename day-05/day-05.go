@@ -15,7 +15,7 @@ type CrateStacks struct {
 
 func (cs *CrateStacks) printStacks() {
 	fmt.Println("Stacks: ")
-	for k,v := range cs.stacks {
+	for k, v := range cs.stacks {
 		fmt.Println(k)
 		current := v.head
 		for current.next != nil {
@@ -51,6 +51,19 @@ func (cs *CrateStacks) moveCrates(instruction *Instruction) *CrateStacks {
 	for i := 0; i < instruction.amount; i++ {
 		crate := cs.stacks[instruction.origin].takeItem()
 		cs.stacks[instruction.destination].insertItem(crate)
+	}
+	return cs
+}
+
+func (cs *CrateStacks) moveCratesGrouped(instruction *Instruction) *CrateStacks {
+	var movedCrates []*Crate
+	for i := 0; i < instruction.amount; i++ {
+		crate := cs.stacks[instruction.origin].takeItem()
+		movedCrates = append(movedCrates, crate)
+	}
+	// put them into the new stack in reverse order
+	for i := len(movedCrates) - 1; i >= 0; i-- {
+		cs.stacks[instruction.destination].insertItem(movedCrates[i])
 	}
 	return cs
 }
@@ -99,7 +112,7 @@ func parseStacks(rawStacks []string) *CrateStacks {
 	for _, line := range rawStacks {
 		for i := 1; i < len(line); i += 4 {
 			val := line[i]
-			stackIndex := i / 4 + 1
+			stackIndex := i/4 + 1
 			if val == ' ' {
 				continue
 			}
@@ -147,9 +160,24 @@ func GetResult1(input []string) string {
 	}
 	return result
 }
+
+func GetResult2(input []string) string {
+	stackInput, instructionInput := parseInput(input)
+	instructions := parseInstructions(instructionInput)
+	stacks := parseStacks(stackInput)
+	for _, instruction := range instructions {
+		stacks.moveCratesGrouped(instruction)
+	}
+	result := ""
+	for _, stack := range stacks.getStacks() {
+		result = fmt.Sprintf("%s%c", result, stacks.stacks[stack].head.content)
+	}
+	return result
+}
+
 func Run() {
 	input := utils.ReadFile("./day-05/input.txt")
 	lines := strings.Split(input, "\n")
 	fmt.Printf("Day 05 part 1 result is:\n%s\n", GetResult1(lines))
-	// fmt.Printf("Day 04 part 2 result is:\n%d\n", GetResult2(inputAssignments))
+	fmt.Printf("Day 05 part 2 result is:\n%s\n", GetResult2(lines))
 }
