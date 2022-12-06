@@ -6,18 +6,7 @@ import (
 	// "strings"
 )
 
-type SignalBuffer [4]rune
-
-func nextSignalItem(signal *SignalBuffer, item rune) *SignalBuffer {
-	signalLength := len(signal)
-	for i := 1; i < len(signal); i++ {
-		signal[i - 1] = signal[i]
-	}
-	signal[signalLength - 1] = item
-	return signal
-}
-
-func checkSignal(signal *SignalBuffer) bool {
+func checkSignal(signal string) bool {
 	signalRunes := map[rune]interface{}{}
 	for _, r := range signal {
 		_, ok := signalRunes[r]
@@ -30,21 +19,30 @@ func checkSignal(signal *SignalBuffer) bool {
 }
 
 
-func GetResult1(input string) int {
-	result := 0
-	var signal SignalBuffer
-	for i, letter := range input {
-		nextSignalItem(&signal, letter)
-		if checkSignal(&signal) {
-			result = i + 1
-			break
+func findStart(signal string, length int) int {
+	left := 0
+	right := length
+	for range signal {
+		signalBuffer := signal[left:right]
+		if checkSignal(signalBuffer) {
+			return right
 		}
+		left++
+		right++
 	}
-	return result
+	return 0
+}
+
+
+func GetResult1(input string) int {
+	return findStart(input, 4)
+}
+func GetResult2(input string) int {
+	return findStart(input, 14)
 }
 
 func Run() {
 	input := utils.ReadFile("./day-06/input.txt")
 	fmt.Printf("Day 06 part 1 result is:\n%d\n", GetResult1(input))
-	// fmt.Printf("Day 06 part 2 result is:\n%s\n", GetResult2(lines))
+	fmt.Printf("Day 06 part 2 result is:\n%d\n", GetResult2(input))
 }
