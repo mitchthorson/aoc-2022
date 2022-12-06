@@ -34,7 +34,6 @@ func ReadFile(filename string) string {
 	reader := bufio.NewReader(file)
 	content, err := ioutil.ReadAll(reader)
 	Check(err)
-	fmt.Println(content)
 	return strings.TrimSuffix(string(content), "\n")
 }
 func ReadInputLines(day int) []string {

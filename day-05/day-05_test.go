@@ -6,7 +6,6 @@ import (
 )
 
 func ExampleGetResult1() {
-	fmt.Println("hi")
 	input := utils.ReadLines("./test_input.txt")
 	result := GetResult1(input)
 	fmt.Println(result)

@@ -3,27 +3,73 @@ package day05
 import (
 	"fmt"
 	"github.com/mitchthorson/aoc-2022/utils"
+	"sort"
+	"strings"
 )
 
 type Instruction struct{ amount, origin, destination int }
 
+type CrateStacks struct {
+	stacks map[int]*Stack
+}
+
+func (cs *CrateStacks) printStacks() {
+	fmt.Println("Stacks: ")
+	for k,v := range cs.stacks {
+		fmt.Println(k)
+		current := v.head
+		for current.next != nil {
+			fmt.Printf("-%c\n", current.content)
+			current = current.next
+		}
+	}
+}
+
+func (cs *CrateStacks) getStacks() []int {
+	stackIds := []int{}
+	for k := range cs.stacks {
+		stackIds = append(stackIds, k)
+	}
+	sort.Ints(stackIds)
+	return stackIds
+}
+
+func (cs *CrateStacks) appendToStack(stackId int, content byte) *CrateStacks {
+	if cs.stacks == nil {
+		cs.stacks = map[int]*Stack{}
+	}
+	stack, ok := cs.stacks[stackId]
+	if !ok {
+		stack = &Stack{}
+		cs.stacks[stackId] = stack
+	}
+	stack.appendItem(content)
+	return cs
+}
+
+func (cs *CrateStacks) moveCrates(instruction *Instruction) *CrateStacks {
+	for i := 0; i < instruction.amount; i++ {
+		crate := cs.stacks[instruction.origin].takeItem()
+		cs.stacks[instruction.destination].insertItem(crate)
+	}
+	return cs
+}
+
 type Crate struct {
-	content string
-	next *Crate
+	content byte
+	next    *Crate
 }
 
 type Stack struct {
 	head *Crate
 }
 
-func (s *Stack) insertItem(item string) {
-	c := new(Crate)
-	c.content = item
-	c.next = s.head
-	s.head = c
+func (s *Stack) insertItem(item *Crate) {
+	item.next = s.head
+	s.head = item
 }
 
-func (s *Stack) appendItem(item string) *Stack {
+func (s *Stack) appendItem(item byte) *Stack {
 	c := new(Crate)
 	c.content = item
 	if s.head == nil {
@@ -42,46 +88,35 @@ func (s *Stack) appendItem(item string) *Stack {
 }
 
 func (s *Stack) takeItem() *Crate {
+	c := s.head
 	s.head = s.head.next
-	return s.head
+	return c
 }
 
-func parseStacks(rawStacks []string) *map[int]*Stack {
-	stacks := map[int]*Stack{}
-	// inputColumns := []string{}
+func parseStacks(rawStacks []string) *CrateStacks {
+	stacks := new(CrateStacks)
+	// inputColumns := []byte{}
 	for _, line := range rawStacks {
-		// this fields logic has one big problem, which is the first field in a line is not always aligned with column 1
-		// need to somehow count the whitespace as columns
-		// fields := strings.Fields(line)
-		for i := 0; i < len(line); i += 4 {
-			fmt.Println(line[i:i+3])
+		for i := 1; i < len(line); i += 4 {
+			val := line[i]
+			stackIndex := i / 4 + 1
+			if val == ' ' {
+				continue
+			}
+			stacks.appendToStack(stackIndex, val)
 		}
-		// for fieldIndex, f := range fields {
-			// if strings.Contains(f, "[") {
-			// 	var item string
-			// 	fmt.Println(f)
-			// 	fmt.Sscanf(f, "[%s]", &item)
-			// 	fmt.Println(item)
-			// 	if val, ok := stacks[fieldIndex + 1]; ok {
-			// 		val.appendItem(item)
-			// 	} else {
-			// 		newStack := new(Stack)
-			// 		newStack.appendItem(item)
-			// 		stacks[fieldIndex + 1] = newStack
-			// 	}
-			// }
-		// }
 	}
-	return &stacks
+	return stacks
 }
 
 func parseInstructions(rawInstructions []string) []*Instruction {
 	instructionList := []*Instruction{}
 	for _, instruction := range rawInstructions {
-		var inst Instruction
-		fmt.Println(instruction)
-		_, err := fmt.Sscanf(instruction, "move %d from %d to %d", &inst.amount, &inst.origin, &inst.destination)
-		utils.Check(err)
+		if instruction == "" {
+			continue
+		}
+		inst := Instruction{}
+		fmt.Sscanf(instruction, "move %d from %d to %d", &inst.amount, &inst.origin, &inst.destination)
 		instructionList = append(instructionList, &inst)
 	}
 	return instructionList
@@ -101,19 +136,20 @@ func parseInput(rawInput []string) ([]string, []string) {
 
 func GetResult1(input []string) string {
 	stackInput, instructionInput := parseInput(input)
-	fmt.Println(len(stackInput))
-	fmt.Println(len(instructionInput))
-	result := ""
 	instructions := parseInstructions(instructionInput)
 	stacks := parseStacks(stackInput)
-	fmt.Println(instructions, stacks)
-	for k,v := range *stacks {
-		fmt.Println(k, v.head.content)
+	for _, instruction := range instructions {
+		stacks.moveCrates(instruction)
+	}
+	result := ""
+	for _, stack := range stacks.getStacks() {
+		result = fmt.Sprintf("%s%c", result, stacks.stacks[stack].head.content)
 	}
 	return result
 }
 func Run() {
-	input := utils.ReadLines("./day-05/test_input.txt")
-	fmt.Printf("Day 05 part 1 result is:\n%s\n", GetResult1(input))
+	input := utils.ReadFile("./day-05/input.txt")
+	lines := strings.Split(input, "\n")
+	fmt.Printf("Day 05 part 1 result is:\n%s\n", GetResult1(lines))
 	// fmt.Printf("Day 04 part 2 result is:\n%d\n", GetResult2(inputAssignments))
 }
