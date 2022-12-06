@@ -14,7 +14,6 @@ type CrateStacks struct {
 }
 
 func (cs *CrateStacks) printStacks() {
-	fmt.Println("Stacks: ")
 	for k, v := range cs.stacks {
 		fmt.Println(k)
 		current := v.head
@@ -34,7 +33,7 @@ func (cs *CrateStacks) getStacks() []int {
 	return stackIds
 }
 
-func (cs *CrateStacks) appendToStack(stackId int, content byte) *CrateStacks {
+func (cs *CrateStacks) insertToStack(stackId int, content byte) *CrateStacks {
 	if cs.stacks == nil {
 		cs.stacks = map[int]*Stack{}
 	}
@@ -43,7 +42,9 @@ func (cs *CrateStacks) appendToStack(stackId int, content byte) *CrateStacks {
 		stack = &Stack{}
 		cs.stacks[stackId] = stack
 	}
-	stack.appendItem(content)
+	c := new(Crate)
+	c.content = content
+	stack.insertItem(c)
 	return cs
 }
 
@@ -82,24 +83,6 @@ func (s *Stack) insertItem(item *Crate) {
 	s.head = item
 }
 
-func (s *Stack) appendItem(item byte) *Stack {
-	c := new(Crate)
-	c.content = item
-	if s.head == nil {
-		s.head = c
-		return s
-	}
-	current := s.head
-	for current != nil {
-		if current.next == nil {
-			break
-		}
-		current = current.next
-	}
-	current.next = c
-	return s
-}
-
 func (s *Stack) takeItem() *Crate {
 	c := s.head
 	s.head = s.head.next
@@ -109,14 +92,15 @@ func (s *Stack) takeItem() *Crate {
 func parseStacks(rawStacks []string) *CrateStacks {
 	stacks := new(CrateStacks)
 	// inputColumns := []byte{}
-	for _, line := range rawStacks {
+	for i := len(rawStacks) - 1; i >= 0; i-- {
+		line := rawStacks[i]
 		for i := 1; i < len(line); i += 4 {
 			val := line[i]
 			stackIndex := i/4 + 1
 			if val == ' ' {
 				continue
 			}
-			stacks.appendToStack(stackIndex, val)
+			stacks.insertToStack(stackIndex, val)
 		}
 	}
 	return stacks
@@ -135,7 +119,7 @@ func parseInstructions(rawInstructions []string) []*Instruction {
 	return instructionList
 }
 
-func parseInput(rawInput []string) ([]string, []string) {
+func parseInput(rawInput []string) (*CrateStacks, []*Instruction) {
 	outputs := map[int][]string{}
 	outputIdx := 0
 	for _, line := range rawInput {
@@ -144,13 +128,11 @@ func parseInput(rawInput []string) ([]string, []string) {
 		}
 		outputs[outputIdx] = append(outputs[outputIdx], line)
 	}
-	return outputs[0], outputs[1]
+	return parseStacks(outputs[0]), parseInstructions(outputs[1])
 }
 
 func GetResult1(input []string) string {
-	stackInput, instructionInput := parseInput(input)
-	instructions := parseInstructions(instructionInput)
-	stacks := parseStacks(stackInput)
+	stacks, instructions := parseInput(input)
 	for _, instruction := range instructions {
 		stacks.moveCrates(instruction)
 	}
@@ -162,9 +144,7 @@ func GetResult1(input []string) string {
 }
 
 func GetResult2(input []string) string {
-	stackInput, instructionInput := parseInput(input)
-	instructions := parseInstructions(instructionInput)
-	stacks := parseStacks(stackInput)
+	stacks, instructions := parseInput(input)
 	for _, instruction := range instructions {
 		stacks.moveCratesGrouped(instruction)
 	}
