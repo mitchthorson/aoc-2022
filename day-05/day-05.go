@@ -10,7 +10,7 @@ import (
 type Instruction struct{ amount, origin, destination int }
 
 type CrateStacks struct {
-	stacks map[int]*Stack
+	stacks []*Stack
 }
 
 func (cs *CrateStacks) printStacks() {
@@ -35,16 +35,15 @@ func (cs *CrateStacks) getStacks() []int {
 
 func (cs *CrateStacks) insertToStack(stackId int, content byte) *CrateStacks {
 	if cs.stacks == nil {
-		cs.stacks = map[int]*Stack{}
+		cs.stacks = []*Stack{}
 	}
-	stack, ok := cs.stacks[stackId]
-	if !ok {
-		stack = &Stack{}
-		cs.stacks[stackId] = stack
+	if len(cs.stacks) - 1 < stackId {
+		stack := &Stack{}
+		cs.stacks = append(cs.stacks, stack)
 	}
 	c := new(Crate)
 	c.content = content
-	stack.insertItem(c)
+	cs.stacks[stackId].insertItem(c)
 	return cs
 }
 
@@ -91,12 +90,11 @@ func (s *Stack) takeItem() *Crate {
 
 func parseStacks(rawStacks []string) *CrateStacks {
 	stacks := new(CrateStacks)
-	// inputColumns := []byte{}
 	for i := len(rawStacks) - 1; i >= 0; i-- {
 		line := rawStacks[i]
 		for i := 1; i < len(line); i += 4 {
 			val := line[i]
-			stackIndex := i/4 + 1
+			stackIndex := i/4
 			if val == ' ' {
 				continue
 			}
@@ -114,6 +112,9 @@ func parseInstructions(rawInstructions []string) []*Instruction {
 		}
 		inst := Instruction{}
 		fmt.Sscanf(instruction, "move %d from %d to %d", &inst.amount, &inst.origin, &inst.destination)
+		// normalize stack index to zero index
+		inst.origin--
+		inst.destination--
 		instructionList = append(instructionList, &inst)
 	}
 	return instructionList
