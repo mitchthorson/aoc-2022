@@ -20,10 +20,3 @@ func ExampleGetResult2() {
 	fmt.Println(result)
 	//Output: MCD
 }
-// func ExampleGetResult2() {
-// 	input := utils.ReadFile("./test_input.txt")
-// 	lines := strings.Split(input, "\n")
-// 	result := GetResult2(lines)
-// 	fmt.Println(result)
-// 	//Output: 4
-// }

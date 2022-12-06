@@ -14,6 +14,12 @@ func Check(e error) {
 	}
 }
 
+func ScanFile(filename string) *bufio.Scanner {
+	file, err := os.Open(filename)
+	Check(err)
+	return bufio.NewScanner(file)
+}
+
 func ReadLines(filename string) []string {
 	file, err := os.Open(filename)
 	Check(err)
