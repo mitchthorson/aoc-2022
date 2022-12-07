@@ -3,7 +3,6 @@ package day06
 import (
 	"fmt"
 	"github.com/mitchthorson/aoc-2022/utils"
-	// "strings"
 )
 
 func checkSignal(signal string) bool {
@@ -18,7 +17,6 @@ func checkSignal(signal string) bool {
 	return true
 }
 
-
 func findStart(signal string, length int) int {
 	left := 0
 	right := length
@@ -32,7 +30,6 @@ func findStart(signal string, length int) int {
 	}
 	return 0
 }
-
 
 func GetResult1(input string) int {
 	return findStart(input, 4)
