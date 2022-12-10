@@ -120,25 +120,6 @@ func normalizeDistance(d int) int {
 	return -1
 }
 
-// func moveAmount()
-
-// func (r *Rope) String() string {
-// 	return fmt.Sprintf()
-//
-// }
-
-func getBoundingPositions(moves []string) []Pos {
-	r := newRope(1)
-	for _, move := range moves {
-		var dir string
-		var num int
-		fmt.Sscanf(move, "%s %d", &dir, &num)
-		r.move(dir, num)
-	}
-	return []Pos{}
-	// return len(*r.tail.history)
-}
-
 func GetResult1(input string) int {
 	moves := strings.Split(input, "\n")
 	rope := newRope(2)
