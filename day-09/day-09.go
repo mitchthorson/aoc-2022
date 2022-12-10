@@ -91,17 +91,9 @@ func (r *Rope) move(dir string, num int) *Rope {
 			if currentKnot.next == nil {
 				break
 			}
-			// check x
-			if utils.Abs(currentKnot.pos.x-currentKnot.next.pos.x) > 1 {
+			if utils.Abs(currentKnot.pos.x-currentKnot.next.pos.x) > 1 || utils.Abs(currentKnot.pos.y-currentKnot.next.pos.y) > 1 {
 				currentKnot.next.pos.x += normalizeDistance(currentKnot.pos.x - currentKnot.next.pos.x)
 				currentKnot.next.pos.y += normalizeDistance(currentKnot.pos.y - currentKnot.next.pos.y)
-			}
-			// check y
-			if utils.Abs(currentKnot.pos.y-currentKnot.next.pos.y) > 1 {
-				currentKnot.next.pos.y += normalizeDistance(currentKnot.pos.y - currentKnot.next.pos.y)
-				currentKnot.next.pos.x += normalizeDistance(currentKnot.pos.x - currentKnot.next.pos.x)
-			}
-			if currentKnot.next == nil {
 			}
 			currentKnot = currentKnot.next
 		}
