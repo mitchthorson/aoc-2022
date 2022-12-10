@@ -8,6 +8,13 @@ import (
 	"strings"
 )
 
+func Abs(num int) int {
+	if num < 0 {
+		return - num
+	}
+	return num
+}
+
 func Check(e error) {
 	if e != nil {
 		panic(e)
