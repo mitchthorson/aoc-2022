@@ -12,35 +12,6 @@ type CPU struct {
 	program []string
 }
 
-type CRT struct {
-	w, h, i int
-	cpu     *CPU
-	line    []bool
-}
-
-func (c *CRT) draw() {
-	spritePosition := c.cpu.X
-	lineIndex := c.i % c.w
-	c.i++
-	if lineIndex >= spritePosition-1 && lineIndex < spritePosition+2 {
-		c.line[lineIndex] = true
-		return
-	}
-	c.line[lineIndex] = false
-}
-
-func (c *CRT) printLine() string {
-	var line string
-	for _, val := range c.line {
-		if val == true {
-			line = fmt.Sprintf("%s%s", line, "#")
-		} else {
-			line = fmt.Sprintf("%s%s", line, ".")
-		}
-	}
-	return line
-}
-
 func (c *CPU) tick() {
 	if len(c.program) < 1 {
 		return
@@ -59,16 +30,44 @@ func (c *CPU) tick() {
 	}
 }
 
-func newCPU(program []string) *CPU {
-	return &CPU{1, program}
+type CRT struct {
+	w, h, i int
+	cpu     *CPU
+	line    []bool
+}
+
+func (c *CRT) draw() {
+	spriteMin, spriteMax := c.cpu.X-1, c.cpu.X+2
+	if c.i >= spriteMin && c.i < spriteMax {
+		c.line[c.i] = true
+	} else {
+		c.line[c.i] = false
+	}
+	c.i = (c.i + 1) % c.w
+}
+
+func (c *CRT) String() string {
+	var line string
+	for _, val := range c.line {
+		if val == true {
+			line = fmt.Sprintf("%s%s", line, "#")
+		} else {
+			line = fmt.Sprintf("%s%s", line, ".")
+		}
+	}
+	return line
 }
 
 func getSignalStrength(cycle, signal int) int {
 	return cycle * signal
 }
 
+func newCPU(program []string) *CPU {
+	return &CPU{1, program}
+}
+
 func newCRT(w, h int, cpu *CPU) *CRT {
-	return &CRT{w, h, 0, cpu, make([]bool, 40)}
+	return &CRT{w, h, 0, cpu, make([]bool, w)}
 }
 
 func GetResult1(input string) int {
@@ -93,7 +92,7 @@ func GetResult2(input string) string {
 	for i := range program {
 		crt.draw()
 		if (i+1)%crt.w == 0 {
-			result = fmt.Sprintf("%s%s\n", result, crt.printLine())
+			result = fmt.Sprintf("%s%s\n", result, crt)
 		}
 		cpu.tick()
 	}
