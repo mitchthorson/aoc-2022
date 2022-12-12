@@ -2,6 +2,7 @@ package day11
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -9,18 +10,26 @@ import (
 )
 
 type Monkey struct {
+	id        int
 	items     []int
+	count     int
 	operation string
 	test      int
 	targets   []int
 }
 
 func (m *Monkey) String() string {
-	return fmt.Sprintf("<Monkey items:%v operation:%s test:%d targets:%v>", m.items, m.operation, m.test, m.targets)
+	return fmt.Sprintf("<Monkey %d items: %v count: %d>", m.id, len(m.items), m.count)
 }
 
-func newMonkey() *Monkey {
+func (m *Monkey) throwItem(item int) {
+	m.items = append(m.items, item)
+}
+
+func newMonkey(id int) *Monkey {
 	m := new(Monkey)
+	m.id = id
+	m.count = 0
 	m.items = []int{}
 	m.targets = []int{}
 	return m
@@ -28,7 +37,6 @@ func newMonkey() *Monkey {
 
 func doOperation(operationText string, inputVal int) int {
 	operationFields := strings.Fields(operationText)
-	fmt.Println(operationFields)
 	var operationVal int
 	if operationFields[1] == "old" {
 		operationVal = inputVal
@@ -57,16 +65,13 @@ func parseLinePrefix(inputLine string) (string, string) {
 	return strings.Trim(lSplit[0], " "), strings.Trim(lSplit[1], " ")
 }
 
-func parseMonkeys(input string) {
+func parseMonkeys(input string) []*Monkey {
 	monkeyStrs := strings.Split(input, "\n\n")
 	var monkeys []*Monkey
-	for _, m := range monkeyStrs {
-		monkey := newMonkey()
-		for i, line := range strings.Split(m, "\n") {
-			// skip first line of each monkey block
-			if i == 0 {
-				continue
-			}
+	for i, m := range monkeyStrs {
+		monkey := newMonkey(i)
+		// skip first line of each monkey block
+		for _, line := range strings.Split(m, "\n")[1:] {
 			prefix, content := parseLinePrefix(line)
 			switch prefix {
 			case "Starting items":
@@ -89,17 +94,51 @@ func parseMonkeys(input string) {
 		}
 		monkeys = append(monkeys, monkey)
 	}
-	fmt.Println(monkeys)
+	return monkeys
+}
+
+func doRound(monkeys []*Monkey) []*Monkey {
+	for _, m := range monkeys {
+		for _, item := range m.items {
+			// update value based on operation
+			item = doOperation(m.operation, item)
+			// monkey inspection count goes up
+			m.count++
+			// monkey gets bored
+			item = item / 3
+			// monkey checks test
+			var targetIndex int
+			if item%m.test == 0 {
+				targetIndex = m.targets[0]
+			} else {
+				targetIndex = m.targets[1]
+			}
+			monkeys[targetIndex].throwItem(item)
+		}
+		// reset items list
+		m.items = []int{}
+	}
+	return monkeys
 }
 
 func GetResult1(input string) int {
-	parseMonkeys(input)
-	result := 0
+	monkeys := parseMonkeys(input)
+	numRounds := 20
+	for i := 0; i < numRounds; i++ {
+		monkeys = doRound(monkeys)
+	}
+	counts := make([]int, len(monkeys))
+	for i, m := range monkeys {
+		counts[i] = m.count
+	}
+	sort.Ints(counts)
+	top := counts[len(counts)-2:]
+	result := top[0] * top[1]
 	return result
 }
 
 func Run() {
-	input := utils.ReadFile("./day-10/input.txt")
+	input := utils.ReadFile("./day-11/input.txt")
 	fmt.Printf("Day 10 part 1 result is:\n%d\n", GetResult1(input))
 	// fmt.Printf("Day 10 part 2 result is:\n%s\n", GetResult2(input))
 }
