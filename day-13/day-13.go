@@ -26,7 +26,7 @@ func (s *signalPacket) Append(newPacket *signalPacket) {
 
 func (s *signalPacket) String() string {
 	if len(s.Children) < 1 {
-		if s.Value == 0 {
+		if s.Value == -1 {
 			return "[]"
 		}
 		return fmt.Sprintf("%d", s.Value)
@@ -39,44 +39,54 @@ func (s *signalPacket) String() string {
 	return output
 }
 
-func cleanValue(item rune) int {
-	packetValue, err := strconv.Atoi(string(item))
+func cleanValue(item string) int {
+	cleanString := strings.ReplaceAll(strings.ReplaceAll(item, "[", ""), "]", "")
+	if cleanString == "" {
+		return -1
+	}
+	packetValue, err := strconv.Atoi(string(cleanString))
 	utils.Check(err)
 	return packetValue
+}
+
+func newPacket() *signalPacket {
+	p := new(signalPacket)
+	p.Value = -1
+	return p
 }
 
 func (s *signalPacket) fromString(input string) *signalPacket {
 	outerLen := len(input) - 1
 	innerInput := input[1:outerLen]
-	items := strings.ReplaceAll(innerInput, ",", "")
+	items := strings.Split(innerInput, ",")
 	current := s
 	for _, item := range items {
-		fmt.Println("parsing item", string(item))
-		// parsing issue when i get []]
-		// tries to recurse without moving up a level
-		// [ is 91
-		// ] is 93
-		listStart := item == 91
-		listEnd := item == 93
+		listStart := strings.HasPrefix(item, "[")
+		listEnd := strings.HasSuffix(item, "]")
 		if listStart == true {
-			fmt.Println("adding child")
-			// fmt.Printf("List starting up: %s\n", item)
-			childPacket := new(signalPacket)
+			for _, c := range item {
+				if c == '[' {
+						childPacket := newPacket()
+						current.Append(childPacket)
+						current = childPacket
+				}
+
+			}
+		}
+		val := cleanValue(item)
+		if val >= 0 {
+			childPacket := newPacket()
+			childPacket.Value = val
 			current.Append(childPacket)
-			current = childPacket
-			continue
 		}
 		if listEnd == true {
-			fmt.Println("ending child")
-			fmt.Println(current)
-			current = current.Parent
-			continue
+			for _, c := range item {
+				if c == ']' {
+					current = current.Parent
+				}
+
+			}
 		}
-		// this is either a value or a value and end of list
-		val := cleanValue(item)
-		childPacket := new(signalPacket)
-		childPacket.Value = val
-		current.Append(childPacket)
 	}
 
 	return s
@@ -84,7 +94,7 @@ func (s *signalPacket) fromString(input string) *signalPacket {
 
 func compare(left, right *signalPacket) int {
 	fmt.Println("comparing", left, right)
-	if left.Value > 0 && right.Value > 0 {
+	if left.Value > -1 && right.Value > -1 {
 		if left.Value < right.Value {
 			fmt.Println("left is smaller")
 			return 1
@@ -95,21 +105,24 @@ func compare(left, right *signalPacket) int {
 		fmt.Println("equal")
 		return 0
 	}
-	if left.Value > 0 {
+	// @ TODO this handling is all messed up now, need to fix 
+	if left.Value > -1 {
 		// if left is an integer, put it into a list
-		newVal := new(signalPacket)
+		newVal := newPacket()
+		newVal.Value = left.Value
 		newVal.Append(&*left)
 		return compare(newVal, right)
 	}
-	if right.Value > 0 {
+	if right.Value > -1 {
 		// if right is an integer, put it into a list
-		newVal := new(signalPacket)
+		newVal := newPacket()
+		newVal.Value = right.Value
 		newVal.Append(&*right)
 		return compare(left, newVal)
 	}
 	for i, l := range left.Children {
 		if i >= len(right.Children) {
-			fmt.Println("left ran out of items")
+			fmt.Println("right ran out of items")
 			return -1
 		}
 		c := compare(l, right.Children[i])
@@ -120,15 +133,20 @@ func compare(left, right *signalPacket) int {
 			return 1
 		}
 		if i == len(left.Children) - 1 && i < len(right.Children) - 1 {
-			fmt.Println("right ran out of items")
+			fmt.Println("left ran out of items")
 			return 1
 		}
+	}
+	// in case left value is empty
+	if left.Value == -1 && len(left.Children) == 0 {
+		return 1
 	}
 	// if len(left.Children) > len(right.Children) {
 	// 	return -1
 	// } else if len(right.Children) > len(left.Children) {
 	// 	return 1
 	// }
+	fmt.Println("hitting default tie")
 	return 0
 }
 
@@ -136,7 +154,7 @@ func parseInput(input string) [][2]*signalPacket {
 	pairs := strings.Split(input, "\n\n")
 	parsedPairs := make([][2]*signalPacket, len(pairs))
 	// var parsedPair [2]signalPacket
-	for i, pair := range pairs[:1] {
+	for i, pair := range pairs {
 		lines := strings.Split(pair, "\n")
 		leftPackets := new(signalPacket)
 		leftPackets.fromString(lines[0])
@@ -151,20 +169,20 @@ func parseInput(input string) [][2]*signalPacket {
 func GetResult1(input string) int {
 	pairs := parseInput(input)
 	result := 0
-	for i, p := range pairs[:1] {
+	for i, p := range pairs {
 		fmt.Println("pair", i+1)
 		fmt.Println(p[0])
 		fmt.Println(p[1])
-		// if compare(p[0], p[1]) > 0 {
-		// 	fmt.Println("correct", i + 1)
-		// 	result += (i + 1)
-		// }
+		if compare(p[0], p[1]) > 0 {
+			fmt.Println("correct", i + 1)
+			result += (i + 1)
+		}
 	}
 	return result
 }
 
 func Run() {
-	input := utils.ReadFile("./day-13/input.txt")
+	input := utils.ReadFile("./day-13/test_input.txt")
 	fmt.Printf("Day 13 part 1 result is:\n%d\n", GetResult1(input))
 	// fmt.Printf("Day 13 part 2 result is:\n%d\n", GetResult2(input))
 }
