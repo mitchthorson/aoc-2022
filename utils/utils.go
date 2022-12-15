@@ -21,6 +21,20 @@ func Check(e error) {
 	}
 }
 
+func Max(a, b int) int {
+    if a > b {
+        return a
+    }
+    return b
+}
+
+func Min(a, b int) int {
+    if a < b {
+        return a
+    }
+    return b
+}
+
 func ScanFile(filename string) *bufio.Scanner {
 	file, err := os.Open(filename)
 	Check(err)
