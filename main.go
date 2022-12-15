@@ -16,6 +16,7 @@ import (
 	"github.com/mitchthorson/aoc-2022/day-11"
 	"github.com/mitchthorson/aoc-2022/day-12"
 	"github.com/mitchthorson/aoc-2022/day-13"
+	"github.com/mitchthorson/aoc-2022/day-14"
 )
 
 func main() {
@@ -60,5 +61,8 @@ func main() {
 	}
 	if day == "13" {
 		day13.Run()
+	}
+	if day == "14" {
+		day14.Run()
 	}
 }
