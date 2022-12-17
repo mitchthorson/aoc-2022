@@ -8,11 +8,6 @@ import (
 	"github.com/mitchthorson/aoc-2022/utils"
 )
 
-type Object interface {
-	Intersects(p *Point) bool
-	MaxY() int
-}
-
 type CaveMap struct {
 	Floor int
 	Map map[Point]struct{}
@@ -61,23 +56,6 @@ func (c *CaveMap) canMove(p *Point) bool {
 	return true
 }
 
-type Floor struct { Y int }
-
-func (f Floor) Intersects(p *Point) bool {
-	if p.Y == f.Y {
-		return true
-	}
-	return false
-}
-
-func (f Floor) MaxY() int {
-	return f.Y
-}
-
-func newFloor(level int) *Floor {
-	return &Floor{level}
-}
-
 type Point struct{ X, Y int }
 
 func (p *Point) String() string {
@@ -101,39 +79,6 @@ func newLine(points []*Point) *Line {
 	l.Points = points
 	return l
 }
-
-func (l Line) Intersects(p *Point) bool {
-	// x align
-	for i, pointA := range l.Points {
-		if i >= len(l.Points)-1 {
-			break
-		}
-		pointB := l.Points[i+1]
-		minX := utils.Min(pointA.X, pointB.X)
-		maxX := utils.Max(pointA.X, pointB.X)
-		minY := utils.Min(pointA.Y, pointB.Y)
-		maxY := utils.Max(pointA.Y, pointB.Y)
-		xIntersect := p.X >= minX && p.X <= maxX
-		yIntersect := p.Y >= minY && p.Y <= maxY
-		if xIntersect && yIntersect {
-			return true
-		}
-	}
-	return false
-}
-
-func (l Line) MaxY() int {
-	maxY := 0
-	for i, pointA := range l.Points {
-		if i >= len(l.Points)-1 {
-			break
-		}
-		pointB := l.Points[i+1]
-		maxY = utils.Max(maxY, utils.Max(pointA.Y, pointB.Y))
-	}
-	return maxY
-}
-
 func (l *Line) String() string {
 	output := "<Line "
 	for _, p := range l.Points {
@@ -144,18 +89,6 @@ func (l *Line) String() string {
 
 type Sand struct {
 	Pos *Point
-}
-
-func (s Sand) MaxY() int {
-	return s.Pos.Y
-}
-
-func (s Sand) Intersects(p *Point) bool {
-	if *s.Pos == *p {
-		return true
-	}
-	return false
-
 }
 
 func newSand(pos string) *Sand {
