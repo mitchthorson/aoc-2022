@@ -7,7 +7,13 @@ import (
 
 func ExampleGetResult1() {
 	input := utils.ReadFile("./test_input.txt")
-	result := GetResult1(input)
+	result := GetResult1(input, 10)
 	fmt.Println(result)
-	//Output: 24
+	//Output: 26
+}
+func ExampleGetResult2() {
+	input := utils.ReadFile("./test_input.txt")
+	result := GetResult2(input, 20)
+	fmt.Println(result)
+	//Output: 56000011
 }
