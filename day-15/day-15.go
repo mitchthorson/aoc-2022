@@ -19,6 +19,7 @@ type BeaconMap struct {
 	zones map[Point]struct{}
 }
 
+
 func (b *BeaconMap) maskSensorRow(s *Sensor, row int, skipBeacon bool, minMax []int) {
 	cx, cy, d := s.Pos.X, s.Pos.Y, s.Dist
 	xSize := d - utils.Abs(row-cy)
@@ -95,6 +96,12 @@ func newSensor(sx, sy, bx, by int) *Sensor {
 	return s
 }
 
+func (s *Sensor) getRowMax(row int) int {
+	cx, cy, d := s.Pos.X, s.Pos.Y, s.Dist
+	xSize := d - utils.Abs(row-cy)
+	return cx + xSize
+}
+
 func distance(x1, y1, x2, y2 int) int {
 	return utils.Abs(x2-x1) + utils.Abs(y2-y1)
 }
@@ -123,10 +130,34 @@ func GetResult1(input string, row int) int {
 func GetResult2(input string, max int) int {
 	s := strings.Split(input, "\n")
 	sensors := parseSensors(s)
-	for row := 0; row <= max; row++ {
-		p := searchRow(sensors, row, max)
-		if p != nil {
-			return p.X * 4000000 + p.Y
+	// loop through rows
+	for y := 0; y <= max; y++ {
+		fmt.Println("row", y, "of", max)
+		// loop through points in row
+		pointLoop: for x := 0; x <= max; x++ {
+			p := Point{x, y}
+			fmt.Println("Checking point", p)
+			for _, s := range sensors {
+				if distance(s.Pos.X, s.Pos.Y, x, y) <= s.Dist {
+					fmt.Println("point inside sensor", s)
+					// here we find ourselves inside the zone for s
+					// what we need to do is jump to the end of the 
+					// zone for this row, which we can calculate
+					// and then skip to the next point loop and keep going
+					sensorCoverMax := s.getRowMax(y)
+					fmt.Println("sensor covers row up to", sensorCoverMax, "making jump")
+					x = s.getRowMax(y)
+					continue pointLoop
+				}
+			}
+			// if we end up here without breaking,
+			// have we searched through every beacon and found 
+			// an undetexted point?
+			fmt.Println("This must the place", p)
+			return p.X * 4000000 + y
+			// if foundBeacon == true {
+			// 	return x * 400000 + y
+			// }
 		}
 	}
 	return 0
@@ -135,5 +166,5 @@ func GetResult2(input string, max int) int {
 func Run() {
 	input := utils.ReadFile("./day-15/input.txt")
 	fmt.Printf("Day 15 part 1 result is:\n%d\n", GetResult1(input, 2000000))
-	fmt.Printf("Day 15 part 2 result is:\n%d\n", GetResult2(input, 400000))
+	fmt.Printf("Day 15 part 2 result is:\n%d\n", GetResult2(input, 4000000))
 }
