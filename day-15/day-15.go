@@ -19,12 +19,11 @@ type BeaconMap struct {
 	zones map[Point]struct{}
 }
 
-
 func (b *BeaconMap) maskSensorRow(s *Sensor, row int, skipBeacon bool, minMax []int) {
 	cx, cy, d := s.Pos.X, s.Pos.Y, s.Dist
 	xSize := d - utils.Abs(row-cy)
 	xStart := cx - xSize
-	xEnd := cx+xSize
+	xEnd := cx + xSize
 	if len(minMax) == 2 {
 		xStart = utils.Min(utils.Max(xStart, minMax[0]), minMax[1])
 		xEnd = utils.Max(utils.Min(xEnd, minMax[1]), minMax[0])
@@ -40,36 +39,6 @@ func (b *BeaconMap) maskSensorRow(s *Sensor, row int, skipBeacon bool, minMax []
 	}
 }
 
-func searchRow(sensors []*Sensor, row, max int) *Point {
-	b := newBeaconMap()
-	for _, s := range sensors {
-		b.maskSensorRow(s, row, false, []int{0, max})
-	}
-	for x := 0; x <= max; x++ {
-		p := newPoint(x, row)
-		_, ok := b.zones[*p]
-		if !ok {
-			return p
-		}
-	}
-	return nil
-}
-
-func getSensorRow(s *Sensor, row int) *BeaconMap {
-	b := newBeaconMap()
-	cx, cy, d := s.Pos.X, s.Pos.Y, s.Dist
-	xSize := d - utils.Abs(row-cy)
-	for x := cx - xSize; x <= cx+xSize; x++ {
-		p := newPoint(x, row)
-		// skip actual beacon
-		if p.X == s.Beacon.X && p.Y == s.Beacon.Y {
-			continue
-		}
-		b.zones[*p] = struct{}{}
-	}
-	return b
-}
-
 func newBeaconMap() *BeaconMap {
 	bm := new(BeaconMap)
 	bm.zones = make(map[Point]struct{})
@@ -77,9 +46,9 @@ func newBeaconMap() *BeaconMap {
 }
 
 type Sensor struct {
-	Pos  *Point
+	Pos    *Point
 	Beacon *Point
-	Dist int
+	Dist   int
 }
 
 func (s *Sensor) String() string {
@@ -131,21 +100,22 @@ func GetResult2(input string, max int) int {
 	// loop through rows
 	for y := 0; y <= max; y++ {
 		// loop through points in row
-		pointLoop: for x := 0; x <= max; x++ {
+	pointLoop:
+		for x := 0; x <= max; x++ {
 			p := Point{x, y}
 			for _, s := range sensors {
 				if distance(s.Pos.X, s.Pos.Y, x, y) <= s.Dist {
 					// here we find ourselves inside the zone for s
-					// what we need to do is jump to the end of the 
+					// what we need to do is jump to the end of the
 					// zone for this row, which we can calculate
 					// and then skip to the next point loop and keep going
 					x = s.getRowMax(y)
 					continue pointLoop
 				}
 			}
-			// if we end up here, we searched through every 
+			// if we end up here, we searched through every
 			//beacon and found an undetexted point
-			return p.X * 4000000 + y
+			return p.X*4000000 + y
 		}
 	}
 	return 0
