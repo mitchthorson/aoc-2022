@@ -25,7 +25,7 @@ func (b *BeaconMap) maskSensorRow(s *Sensor, row int, skipBeacon bool, minMax []
 	xStart := cx - xSize
 	xEnd := cx+xSize
 	if len(minMax) == 2 {
-		xStart = utils.Max(utils.Min(xStart, minMax[0]), minMax[0])
+		xStart = utils.Min(utils.Max(xStart, minMax[0]), minMax[1])
 		xEnd = utils.Max(utils.Min(xEnd, minMax[1]), minMax[0])
 	}
 
