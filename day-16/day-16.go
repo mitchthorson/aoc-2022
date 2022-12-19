@@ -169,9 +169,6 @@ func partitionValves(valves []string) [][2][]string {
 // i have tried and failed to understand how to do this partitioning correctly
 // this solution is borrowed from : https://github.com/lucianoq/adventofcode/blob/master/2022/16/main2.go
 // i understand the basic gist of it, but its still beyond me.
-// this is a situation where in python i could use itertools to do this for me,
-// but doing it on my own is just a bit more than I can manage for now.
-// going to move on based on this solution.
 func partition(list []string) [][2][]string {
 	p := [][2][]string{}
 	// i+=2 will generate half of the partitions.
@@ -189,6 +186,34 @@ func partition(list []string) [][2][]string {
 		p = append(p, part)
 	}
 	return p
+}
+
+// found another solution for partinioning on stack overflow in python
+// https://stackoverflow.com/questions/40709488/all-possibilities-to-split-a-list-into-two-lists
+// here is my attempt to re-implement, which also seems to work
+func partition2(list []string) [][2][]string {
+	results := [][2][]string{}
+	patterns := [][]int{}
+	for i := 0; i < 1<<(len(list)-1); i++ {
+		pattern := make([]int, 0, len(list))
+		for j := 0; j < len(list)-1; j++ {
+			pattern = append(pattern, i/(1<<j)%2)
+		}
+		patterns = append(patterns, pattern)
+	}
+	for _, p := range patterns {
+		list1 := []string{list[len(list) - 1]}
+		list2 := []string{}
+		for i, val := range p {
+			if val == 1 {
+				list1 = append(list1, list[i])
+			} else {
+				list2 = append(list2, list[i])
+			}
+		}
+		results = append(results, [2][]string{list1, list2})
+	}
+	return results
 }
 
 func GetResult1(input string) int {
@@ -212,7 +237,7 @@ func GetResult2(input string) int {
 		}
 	}
 	distances := calculateDistances(tunnels)
-	partitions := partition(valvesToOpen)
+	partitions := partition2(valvesToOpen)
 	result := 0
 	for _, p := range partitions {
 		total := findPath("AA", 26, 0, p[0], distances, tunnels) + findPath("AA", 26, 0, p[1], distances, tunnels)
