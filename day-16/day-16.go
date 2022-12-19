@@ -123,7 +123,6 @@ func dfs(currentValve string, time, pressure int, toOpen []string, distances map
 			}
 		}
 	}
-	fmt.Println(max)
 	return max
 }
 
@@ -142,8 +141,8 @@ func GetResult1(input string) int {
 	fmt.Println("valves to open", valvesToOpen)
 
 	distances := calculateDistances(t)
-	dfs("AA", 30, 0, valvesToOpen, distances, t)
-	return 0
+	result := dfs("AA", 30, 0, valvesToOpen, distances, t)
+	return result
 }
 
 func Run() {
