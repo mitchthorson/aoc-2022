@@ -38,7 +38,6 @@ func parseTunnels(lines []string) TunnelMap {
 		tunnelInput = strings.TrimPrefix(tunnelInput, " tunnel leads to valve ")
 		tunnelInput = strings.TrimPrefix(tunnelInput, " tunnels lead to valves ")
 		for _, tId := range strings.Split(tunnelInput, ", ") {
-			fmt.Println("tunnel to", tId)
 			v.Tunnels = append(v.Tunnels, tId)
 		}
 		tunnelMap[v.Id] = *v
@@ -71,49 +70,80 @@ func contains(list []string, item string) bool {
 	return false
 }
 
+func calculateDistances(tunnelMap TunnelMap) map[string]map[string]int {
+	distances := map[string]map[string]int{}
+	INF := 1 << 30
+
+	// build the matrix of all values set to INF
+	for v1 := range tunnelMap {
+		distances[v1] = map[string]int{}
+		for v2 := range tunnelMap {
+			distances[v1][v2] = INF
+		}
+	}
+	// we know some of the distances are 1 from the input, set those here
+	for v1, valve := range tunnelMap {
+		for _, v2 := range valve.Tunnels {
+			distances[v1][v2] = 1
+		}
+	}
+	// now for the Floyd-Warshall algorithm
+	// https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm
+	for k := range tunnelMap {
+		for i := range tunnelMap {
+			for j := range tunnelMap {
+				distances[i][j] = utils.Min(distances[i][j], distances[i][k]+distances[k][j])
+			}
+		}
+	}
+	return distances
+}
+
+func removeValve(valves []string, v string) []string {
+	result := make([]string, 0, len(valves))
+	for _, valve := range valves {
+		if valve == v {
+			continue
+		}
+		result = append(result, valve)
+	}
+	return result
+}
+
+func dfs(currentValve string, time, pressure int, toOpen []string, distances map[string]map[string]int, tunnelMap TunnelMap) int {
+	max := pressure
+	for _, destinationValve := range toOpen {
+		// add one for opening valve
+		distance := distances[currentValve][destinationValve] + 1
+		if time-distance > 0 {
+			pathResult := dfs(destinationValve, time-distance, pressure+time*tunnelMap[destinationValve].Rate, removeValve(toOpen, destinationValve), distances,
+				tunnelMap)
+			if pathResult > max {
+				max = pathResult
+			}
+		}
+	}
+	fmt.Println(max)
+	return max
+}
+
 func GetResult1(input string) int {
 	t := parseTunnels(strings.Split(input, "\n"))
-	fmt.Println(t["AA"])
 	// Instead of this queue, it would seem we need to find
 	// the shortest paths to a set of weighted edges
 	// A Floyd-Warshall algorithm can help with this:
-	// https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm
 	// queue of paths to check
-	todo := []Step{{30, 0, make(map[string]struct{}), []string{"AA"}}}
-	result := 0
-	for len(todo) > 0 {
-		step := todo[0]
-		todo = todo[1:]
-		if step.Minutes == 0 {
-			if step.Points > result {
-				result = step.Points
-			}
-			break
+	valvesToOpen := []string{}
+	for id, v := range t {
+		if v.Rate > 0 {
+			valvesToOpen = append(valvesToOpen, id)
 		}
-		currentValve := step.Route[len(step.Route)-1]
-		// next step will have one less minute
-		nextMinutes := step.Minutes - 1
-		// check if the current valve is already open
-		_, valveOpen := step.OpenValves[currentValve]
-		// if its not open, and its worth more than zero
-		// add path where we turn it on
-		if !valveOpen && t[currentValve].Rate > 0 {
-			valves := step.OpenValves
-			nextPoints := step.Points + t[currentValve].Rate*nextMinutes
-			next := newStep(nextMinutes, nextPoints, valves, step.Route)
-			valves[currentValve] = struct{}{}
-			todo = append(todo, *next)
-		}
-		// now add all the possible move paths
-		for _, nextValve := range t[currentValve].Tunnels {
-			valves := step.OpenValves
-			next := newStep(nextMinutes, step.Points, valves, append(step.Route, nextValve))
-			todo = append(todo, *next)
-		}
-
 	}
+	fmt.Println("valves to open", valvesToOpen)
 
-	return result
+	distances := calculateDistances(t)
+	dfs("AA", 30, 0, valvesToOpen, distances, t)
+	return 0
 }
 
 func Run() {
