@@ -110,13 +110,15 @@ func removeValve(valves []string, v string) []string {
 	return result
 }
 
-func dfs(currentValve string, time, pressure int, toOpen []string, distances map[string]map[string]int, tunnelMap TunnelMap) int {
+// findPath uses depth-first search
+func findPath(currentValve string, time, pressure int, toOpen []string, distances map[string]map[string]int, tunnelMap TunnelMap) int {
 	max := pressure
 	for _, destinationValve := range toOpen {
 		// add one for opening valve
 		distance := distances[currentValve][destinationValve] + 1
-		if time-distance > 0 {
-			pathResult := dfs(destinationValve, time-distance, pressure+time*tunnelMap[destinationValve].Rate, removeValve(toOpen, destinationValve), distances,
+		newTime := time-distance
+		if newTime > 0 {
+			pathResult := findPath(destinationValve, newTime, pressure+newTime*tunnelMap[destinationValve].Rate, removeValve(toOpen, destinationValve), distances,
 				tunnelMap)
 			if pathResult > max {
 				max = pathResult
@@ -126,27 +128,31 @@ func dfs(currentValve string, time, pressure int, toOpen []string, distances map
 	return max
 }
 
+func partitionValves(valves []string) [][2][]string {
+	partitions := [][2][]string{}
+	for i := 0; i < 1<<len(valves); i+=2 {
+		partition := [2][]string{}
+		// i might need help with this. 
+
+	}
+
+}
+
 func GetResult1(input string) int {
-	t := parseTunnels(strings.Split(input, "\n"))
-	// Instead of this queue, it would seem we need to find
-	// the shortest paths to a set of weighted edges
-	// A Floyd-Warshall algorithm can help with this:
-	// queue of paths to check
+	tunnels := parseTunnels(strings.Split(input, "\n"))
 	valvesToOpen := []string{}
-	for id, v := range t {
+	for id, v := range tunnels {
 		if v.Rate > 0 {
 			valvesToOpen = append(valvesToOpen, id)
 		}
 	}
-	fmt.Println("valves to open", valvesToOpen)
-
-	distances := calculateDistances(t)
-	result := dfs("AA", 30, 0, valvesToOpen, distances, t)
+	distances := calculateDistances(tunnels)
+	result := findPath("AA", 30, 0, valvesToOpen, distances, tunnels)
 	return result
 }
 
 func Run() {
-	input := utils.ReadFile("./day-16/test_input.txt")
+	input := utils.ReadFile("./day-16/input.txt")
 	fmt.Printf("Day 15 part 1 result is:\n%d\n", GetResult1(input))
 	// fmt.Printf("Day 15 part 2 result is:\n%d\n", GetResult2(input, 4000000))
 }
