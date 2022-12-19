@@ -9,5 +9,5 @@ func ExampleGetResult1() {
 	input := utils.ReadFile("./test_input.txt")
 	result := GetResult1(input)
 	fmt.Println(result)
-	//Output: 0
+	//Output: 3068
 }
