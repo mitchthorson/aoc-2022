@@ -108,19 +108,52 @@ type Chamber struct {
 	W        int
 	Active   *Shape
 	Fallen   []*Shape
-	Jets     []string
-	Step     int
-	ShapeIdx int
-	JetIdx   int
+	jets     []string
+	step     int
+	shapeIdx int
+	jetIdx   int
+	history  map[[2]int]struct{}
+	topo     []int
 }
 
+// TODO
+// impement topo map that gets updated with each shape
+func (c *Chamber) getTopo() []int {
+	topo := make([]int, c.W)
+	for i := 0; i < c.W; i++ {
+		// each column
+		baseHeight := c.HighestPoint()
+		fmt.Println("baseheight", baseHeight)
+		s := newShape("#", i, baseHeight)
+		fmt.Println("scanning column", i)
+		scan: for {
+			for _, s2 := range c.Fallen {
+				if s.Collides(s2) {
+					fmt.Println("found surface")
+					fmt.Println(s2)
+					break scan
+				}
+			}
+			if s.Pos.Y < 0 {
+				break scan
+			}
+			fmt.Println("nothing found, scan continues down")
+			// go down
+			s.Pos.Y--
+		}
+		topo[i] = baseHeight - s.Pos.Y
+	}
+	return topo
+}
+// implement function to insert shapes based on a given 
+// topo map at a given height
+
 func (c *Chamber) String() string {
-	return fmt.Sprintf("<Chamber %d, %s, fallen: %d, %v, %d>", c.W, c.Active, len(c.Fallen), c.Jets, c.Step)
+	return fmt.Sprintf("<Chamber %d, %s, fallen: %d, height: %d>", c.W, c.Active, len(c.Fallen), c.HighestPoint())
 }
 
 func (c *Chamber) JetPush() {
-	dir := c.Jets[c.JetIdx]
-	c.JetIdx = (c.JetIdx + 1) % len(c.Jets)
+	dir := c.jets[c.jetIdx]
 	if dir == ">" {
 		// if the max x of the shape is against the wall, return here
 		if c.Active.MaxX() >= c.W-1 {
@@ -149,11 +182,11 @@ func (c *Chamber) JetPush() {
 	}
 }
 
-func (c *Chamber) ShapeDrop() {
+// returns a boolean that is true if a new shape is created
+func (c *Chamber) ShapeDrop() bool {
 	if c.Active.MinY() == 0 {
 		c.Fallen = append(c.Fallen, c.Active)
-		c.Active = c.NextShape()
-		return
+		return true
 	}
 	c.Active.Pos.Y--
 	for _, fs := range c.Fallen {
@@ -161,10 +194,10 @@ func (c *Chamber) ShapeDrop() {
 			// put it back to the previous position
 			c.Active.Pos.Y++
 			c.Fallen = append(c.Fallen, c.Active)
-			c.Active = c.NextShape()
-			return
+			return true
 		}
 	}
+	return false
 }
 
 func (c *Chamber) HighestPoint() int {
@@ -180,27 +213,43 @@ func (c *Chamber) HighestPoint() int {
 func (c *Chamber) NextShape() *Shape {
 	currentHighest := c.HighestPoint()
 	rawShapes := getShapes()
-	s := newShape(rawShapes[c.ShapeIdx], 2, currentHighest+4)
+	s := newShape(rawShapes[c.shapeIdx], 2, currentHighest+4)
 	s.Pos.Y += s.Height()
-	c.ShapeIdx = (c.ShapeIdx + 1) % len(rawShapes)
+	c.shapeIdx = (c.shapeIdx + 1) % len(rawShapes)
 	return s
 }
 
-func (c *Chamber) Next() {
-	if c.Step%2 == 0 {
+// returns a boolean if the pattern repeats
+func (c *Chamber) Next() bool {
+	if c.step%2 == 0 {
 		c.JetPush()
+		c.jetIdx = (c.jetIdx + 1) % len(c.jets)
 	} else {
-		c.ShapeDrop()
+		newShape := c.ShapeDrop()
+		if newShape {
+			// fmt.Println("new shape", c.shapeIdx, c.jetIdx)
+			// update the history here, checking if the
+			// current shape and wind index pairs have been seen before
+			historyKey := [2]int{c.shapeIdx, c.jetIdx}
+			_, seen := c.history[historyKey]
+			c.history[historyKey] = struct{}{}
+			c.Active = c.NextShape()
+			if seen {
+				return true
+			}
+		}
 	}
-	c.Step++
+	c.step++
+	return false
 }
 
 func newChamber(w int, jets string) *Chamber {
 	c := new(Chamber)
 	c.W = w
-	c.Jets = strings.Split(jets, "")
-	c.Step = 0
+	c.jets = strings.Split(jets, "")
+	c.step = 0
 	c.Active = c.NextShape()
+	c.history = map[[2]int]struct{}{{0, 0}: {}}
 	return c
 }
 
@@ -238,24 +287,35 @@ func GetResult1(input string) int {
 }
 
 func GetResult2(input string) int {
-	// for part 2, i suspect that the pattern between the 
+	// for part 2, i suspect that the pattern between the
 	// wind and the rocks repeats, giving us something we
 	// can figure out based on that.
 	// just need to determine the exact repitition point,
 	// then use the shape count and the height to compute the final answer
-	numShapes := 1000000000000
+	numShapes := 1
 	c := newChamber(7, input)
 	for {
-		c.Next()
+		repeat := c.Next()
+		if repeat {
+			fmt.Println("we have a repeat, let's speed things up")
+			shapesDropped, highest := len(c.Fallen), c.HighestPoint()
+			multiples := numShapes / shapesDropped
+			fmt.Println("dropped", shapesDropped, "high", highest, "can be repeated", multiples)
+			fmt.Println(shapesDropped * multiples)
+			// c.
+			break
+		}
 		if len(c.Fallen) == numShapes {
 			break
 		}
 	}
+	fmt.Println(c.Fallen[0])
+	fmt.Println(c.getTopo())
 	return c.HighestPoint() + 1
 }
 
 func Run() {
 	input := utils.ReadFile("./day-17/input.txt")
-	fmt.Printf("Day 16 part 1 result is:\n%d\n", GetResult1(input))
-	// fmt.Printf("Day 16 part 2 result is:\n%d\n", GetResult2(input))
+	// fmt.Printf("Day 17 part 1 result is:\n%d\n", GetResult1(input))
+	fmt.Printf("Day 17 part 2 result is:\n%d\n", GetResult2(input))
 }
