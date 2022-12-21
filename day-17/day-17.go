@@ -98,7 +98,7 @@ type Chamber struct {
 	step     int
 	shapeIdx int
 	jetIdx   int
-	history  map[[2]int]struct{}
+	history  map[[2]int][2]int
 	topo     []int
 }
 
@@ -225,8 +225,9 @@ func (c *Chamber) NextShape() *Shape {
 	return s
 }
 
-// returns a boolean if the pattern repeats
-func (c *Chamber) Next() bool {
+// returns a true boolean if the pattern repeats
+// and the height value of the original occurence
+func (c *Chamber) Next() (bool, [2]int) {
 	if c.step%2 == 0 {
 		c.JetPush()
 	} else {
@@ -235,17 +236,17 @@ func (c *Chamber) Next() bool {
 			// update the history here, checking if the
 			// current shape and wind index pairs have been seen before
 			historyKey := [2]int{c.shapeIdx, c.jetIdx}
-			_, seen := c.history[historyKey]
-			c.history[historyKey] = struct{}{}
+			origHeight, seen := c.history[historyKey]
 			c.Active = c.NextShape()
 			if seen {
 				c.step++
-				return true
+				return true, origHeight
 			}
+			c.history[historyKey] = [2]int{len(c.Fallen), c.HighestPoint()}
 		}
 	}
 	c.step++
-	return false
+	return false, [2]int{0, 0}
 }
 
 func newChamber(w int, jets string) *Chamber {
@@ -254,7 +255,7 @@ func newChamber(w int, jets string) *Chamber {
 	c.jets = strings.Split(jets, "")
 	c.step = 0
 	c.Active = c.NextShape()
-	c.history = map[[2]int]struct{}{{0, 0}: {}}
+	c.history = map[[2]int][2]int{{0, 0}: {0, 0}}
 	return c
 }
 
@@ -300,29 +301,23 @@ func GetResult2(input string) int {
 	numShapes := 1000000000000
 	c := newChamber(7, input)
 	for {
-		repeat := c.Next()
+		repeat, cycle := c.Next()
 		if len(c.Fallen) == numShapes {
 			break
 		}
 		if repeat {
-			fmt.Println("we have a repeat, let's speed things up")
-			shapesDropped, highest := len(c.Fallen), c.HighestPoint()
-			multiples := numShapes / shapesDropped
-			fmt.Println("repition after", shapesDropped, "shapes", "and a height of", highest)
-			fmt.Println("we can repeat this pattern", multiples, "times")
-			fmt.Println("that number of repitions would result in a height of", multiples * highest)
-			// generate the topo of the current rocks
-			topo := c.getTopo()
-			// reset the fallen shapes to zero
-			c.Fallen = []*Shape{}
-			// the new height with all possible repititions should equal highest * multiples
-			newHeight := highest * multiples
-			// insert a copy of the topo at the new height
-			c.insertTopo(newHeight, topo)
-			// how many more shapes do we need to complete the task?
-			numRemaining := numShapes - shapesDropped * multiples
-			fmt.Println("need to add", numRemaining, "more shapes")
-			// c.
+			// @TODO need to figure out how to calculate the height created between repititions
+			// as well as the offset differenct in order to compute the correct answer
+			cycleShapeOffset, cycleHeightOffset := cycle[0], cycle[1]
+			cycleShapeCount, cycleHeight := len(c.Fallen) - cycleShapeOffset, c.HighestPoint() - cycleHeightOffset
+			numCycles := numShapes / cycleShapeCount
+			remainingShapes := numShapes % cycleShapeCount
+			fmt.Println("remainingShapes", remainingShapes)
+			currentTopo := c.getTopo()
+			c.insertTopo(numCycles * cycleHeight + cycleHeightOffset, currentTopo)
+			for i := 0; i < remainingShapes; i++ {
+				c.Next()
+			}
 			break
 		}
 	}
