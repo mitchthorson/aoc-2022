@@ -21,6 +21,7 @@ import (
 	"github.com/mitchthorson/aoc-2022/day-16"
 	"github.com/mitchthorson/aoc-2022/day-17"
 	"github.com/mitchthorson/aoc-2022/day-18"
+	"github.com/mitchthorson/aoc-2022/day-19"
 )
 
 func main() {
@@ -97,6 +98,9 @@ func main() {
 	}
 	if day == "18" {
 		day18.Run()
+	}
+	if day == "19" {
+		day19.Run()
 	}
 	fmt.Println("Day not setup", day)
 }
